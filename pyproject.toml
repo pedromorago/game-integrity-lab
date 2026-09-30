@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "game-integrity-lab"
+version = "0.1.0"
+description = "An evaluation testbed for models that flag players, on synthetic poker decision data"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Pedro Morago" }]
+dependencies = ["numpy>=1.26", "scikit-learn>=1.4"]
+
+[project.scripts]
+gil = "gil.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "hypothesis>=6"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests"]
+markers = ["slow: runs the whole check suite once per seeded bug"]
