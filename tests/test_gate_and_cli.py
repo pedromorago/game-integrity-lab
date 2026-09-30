@@ -38,7 +38,7 @@ def test_report_is_strict_json_and_marked_synthetic(reports):
     json.loads(to_json(base))  # parses back without NaN or Infinity
     md = to_markdown(base)
     assert "synthetic" in md and "never proof of cheating" in md
-    assert "—" not in md
+    assert "\u2014" not in md
 
 
 def test_gate_passes_on_identical_reports(reports):
