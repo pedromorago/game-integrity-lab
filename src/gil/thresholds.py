@@ -12,8 +12,10 @@ def threshold_for_fpr_budget(scores: np.ndarray, y: np.ndarray, budget: float) -
 
     Flagging is `score >= threshold`. With n legitimate units, at most
     floor(budget * n) of them may be flagged, so the threshold sits just above
-    the (k+1)-th highest legitimate score. Returns +inf when no threshold
-    flags few enough (k = 0 and ties at the top), -inf when all may be flagged.
+    the (k+1)-th highest legitimate score. With k = 0 no legitimate unit is
+    flagged. Returns -inf when the budget allows every legitimate unit to be
+    flagged. Ties at the cut are all left unflagged, so the budget is never
+    exceeded on the data the threshold was chosen on.
     """
     legit = np.sort(np.asarray(scores, dtype=float)[np.asarray(y) == 0])[::-1]
     k = math.floor(budget * len(legit) + 1e-9)

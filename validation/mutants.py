@@ -28,8 +28,15 @@ def _split_by_sessions(ds: Dataset, seed: int | None, fractions=(0.6, 0.2, 0.2))
     return Split(*(np.unique(ds.sessions.player[part == i]) for i in range(3)))
 
 
-def _unseeded_split(ds: Dataset, seed: int | None, fractions=(0.6, 0.2, 0.2)) -> Split:
-    return split_by_pool(ds, None, fractions)
+# A generator shared by the whole process, as with np.random.seed() at import
+# time followed by np.random.permutation() inside the function. The output
+# then depends on how many draws happened before, not on the seed argument.
+# (Seeded here once, so that the runner's table is the same on every run.)
+_SHARED_RNG = np.random.default_rng(2026)
+
+
+def _split_from_shared_rng(ds: Dataset, seed: int | None, fractions=(0.6, 0.2, 0.2)) -> Split:
+    return split_by_pool(ds, int(_SHARED_RNG.integers(2**31)), fractions)
 
 
 def _swapped_precision_recall(y, flagged):
@@ -88,7 +95,7 @@ def _models_with_raw_isolation_scores(seed, rules):
 
 MUTANTS: list[tuple[Pipeline, str]] = [
     (replace(REAL, name="Players leak across splits (split by session)", split=_split_by_sessions), "split"),
-    (replace(REAL, name="Split not seeded", split=_unseeded_split), "split"),
+    (replace(REAL, name="Split ignores its seed (shared global RNG)", split=_split_from_shared_rng), "split"),
     (replace(REAL, name="Feature built from a ground-truth column", player_features=_leaky_features), "features"),
     (replace(REAL, name="Isolation Forest score sign not flipped", models=_models_with_raw_isolation_scores), "model"),
     (replace(REAL, name="Threshold tuned on the test set", threshold_split="test"), "threshold"),

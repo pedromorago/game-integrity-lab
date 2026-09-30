@@ -1,0 +1,9 @@
+{
+  "_comment": "Tolerances for `gil gate`. Rates are fractions (0.01 = one percentage point). Segment rates are measured on the test split, where a segment can hold only 15 to 130 players, so one player moves a rate by 0.8 to 7 points.",
+  "max_pr_auc_drop": 0.03,
+  "max_recall_drop": 0.05,
+  "max_fpr_increase": 0.005,
+  "max_legit_segment_rate_increase": 0.015,
+  "max_positive_segment_recall_drop": 0.10,
+  "max_scenario_pr_auc_drop": 0.05
+}

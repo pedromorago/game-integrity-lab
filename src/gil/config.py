@@ -84,8 +84,8 @@ RTA_USER = replace(
 class CollusionConfig:
     """Pairs of players who sit together, and what they do differently."""
 
-    colluding_pairs: int = 25
-    friend_pairs: int = 40          # legitimate pairs who also sit together often
+    colluding_pairs: int = 50
+    friend_pairs: int = 80          # legitimate pairs who also sit together often
     together_prob: float = 0.7      # P(partner is at the table in a session)
     friend_together_prob: float = 0.6
     # Soft play: a raise against the partner is kept with this probability,
@@ -111,7 +111,7 @@ class SpotConfig:
 @dataclass(frozen=True)
 class SimConfig:
     counts: dict[str, int] = field(default_factory=lambda: {
-        "recreational": 700, "regular": 450, "multi_tabler": 150, "bot": 80, "rta": 80,
+        "recreational": 1400, "regular": 900, "multi_tabler": 300, "bot": 160, "rta": 160,
     })
     behaviours: dict[str, Behaviour] = field(default_factory=lambda: {
         "recreational": RECREATIONAL, "regular": REGULAR, "multi_tabler": MULTI_TABLER,
@@ -127,7 +127,7 @@ def default_config() -> SimConfig:
 
 
 def small_config() -> SimConfig:
-    """Half the default population, used by the checks and the tests."""
+    """A quarter of the default population, used by the checks and the tests."""
     return SimConfig(
         counts={"recreational": 350, "regular": 225, "multi_tabler": 75, "bot": 40, "rta": 40},
         collusion=replace(CollusionConfig(), colluding_pairs=12, friend_pairs=20),

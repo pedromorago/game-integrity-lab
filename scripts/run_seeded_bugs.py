@@ -29,12 +29,17 @@ def failures(pipeline):
 
 
 def reported(pipeline) -> str:
+    """Three cells: GB PR-AUC, IF PR-AUC, and GB's precision/recall and headline."""
     try:
-        rep = base_run(pipeline).player.runs["gradient_boosting"].report
+        runs = base_run(pipeline).player.runs
     except Exception as e:  # noqa: BLE001
-        return f"(crashed: {type(e).__name__})"
-    head = ", ".join(f"{k} {v:.2f}" for k, v in rep["headline"].items())
-    return f"{rep['pr_auc']:.3f} | {head}"
+        return f"(crashed: {type(e).__name__}) | | "
+    gb, iforest = runs["gradient_boosting"].report, runs["isolation_forest"].report
+    said = f"precision {gb['precision']:.2f}, recall {gb['recall']:.2f}"
+    extra = {k: v for k, v in gb["headline"].items() if k not in ("precision", "recall")}
+    if extra:
+        said = ", ".join(f"{k} {v:.2f}" for k, v in extra.items()) + " as the headline"
+    return f"{gb['pr_auc']:.3f} | {iforest['pr_auc']:.3f} | {said}"
 
 
 def main() -> int:
@@ -45,9 +50,9 @@ def main() -> int:
         print("The real pipeline fails: " + ", ".join(c.name for c in real))
     print(f"{len(CHECKS)} checks; the real pipeline passes {len(CHECKS) - len(real)} of them.")
     print()
-    print("| Seeded bug | Stage | Reported PR-AUC | Reported headline | Caught by |")
-    print("|---|---|---|---|---|")
-    print(f"| none (real pipeline) | | {reported(REAL)} | {'**nothing should fail**' if not real else 'FAILS'} |")
+    print("| Seeded bug | Stage | GB PR-AUC | IF PR-AUC | GB reported | Caught by |")
+    print("|---|---|---|---|---|---|")
+    print(f"| none (real pipeline) | | {reported(REAL)} | {'nothing (passes every check)' if not real else 'FAILS'} |")
     for pipeline, stage in MUTANTS:
         caught = failures(pipeline)
         if not caught:
@@ -55,8 +60,9 @@ def main() -> int:
         names = ", ".join(f"`{c.name}` ({c.kind})" for c in caught) or "**nothing**"
         print(f"| {pipeline.name} | {stage} | {reported(pipeline)} | {names} |")
     print()
-    print("Reported PR-AUC and headline: gradient boosting on the player task, as each pipeline would report it "
-          "on the check data (half-size population, seed 11).")
+    print("GB and IF: gradient boosting and Isolation Forest on the player task, as each pipeline would report "
+          "them on the check data (a quarter-size synthetic population, seed 11). \"GB reported\" is what the "
+          "report's precision, recall and headline fields would say.")
     return 0 if ok else 1
 
 
