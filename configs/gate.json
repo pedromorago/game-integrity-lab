@@ -1,5 +1,5 @@
 {
-  "_comment": "Tolerances for `gil gate`. Rates are fractions (0.01 = one percentage point). Segment rates are measured on the test split, where a segment can hold only 15 to 130 players, so one player moves a rate by 0.8 to 7 points.",
+  "_comment": "Tolerances for `gil gate`. Rates are fractions (0.01 = one percentage point). Segment rates are measured on the test split, where a segment holds a few dozen to a few hundred units (31 RTA users, 184 regulars with the default data and seeds), so one player moves a rate by 0.4 to 3 points.",
   "max_pr_auc_drop": 0.03,
   "max_recall_drop": 0.05,
   "max_fpr_increase": 0.005,

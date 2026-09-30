@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - name: Tests
+        run: pytest -q
+      - name: Generate synthetic data and evaluate
+        run: |
+          gil generate --out data --seed 42
+          gil evaluate --data data --out out/baseline
+          { echo "## Evaluation report (synthetic data)"; echo; cat out/baseline/report.md; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Seeded bugs report
+        run: |
+          python scripts/run_seeded_bugs.py | tee seeded-bugs.md
+          { echo "## Seeded bugs in the evaluation pipeline"; echo; cat seeded-bugs.md; } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          PYTHONPATH: src:.
+      - name: Spread across evaluation seeds
+        run: |
+          python scripts/split_spread.py | tee split-spread.md
+          { echo "## Spread across evaluation seeds"; echo; cat split-spread.md; } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          PYTHONPATH: src:.
+      - name: Regression gate demo
+        run: |
+          # The same evaluation run again must pass the gate.
+          gil evaluate --data data --out out/rerun
+          gil gate out/baseline/report.json out/rerun/report.json --config configs/gate.json --quiet
+          # A candidate without the accuracy features must fail it with exit code 1.
+          gil evaluate --data data --out out/no-accuracy --exclude accuracy
+          set +e
+          gil gate out/baseline/report.json out/no-accuracy/report.json --config configs/gate.json \
+            --markdown gate.md --quiet
+          code=$?
+          set -e
+          test "$code" -eq 1
+          { echo "## Regression gate demo (expected to fail)"; echo; cat gate.md; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: |
+            out/*/report.*
+            seeded-bugs.md
+            split-spread.md
+            gate.md
